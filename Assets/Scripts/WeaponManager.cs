@@ -9,10 +9,16 @@ public class WeaponManager : MonoBehaviour
     public float damage = 25f;
     public Animator playerAnimator;
 
+    public ParticleSystem muzzleFlash;
+    public GameObject hitParticle;
+
+    public AudioClip gunShot;
+    public AudioSource audioSource;
+
     // Start is called before the first frame update
     void Start()
     {
-
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -31,6 +37,8 @@ public class WeaponManager : MonoBehaviour
     }
     void Shoot()
     {
+        muzzleFlash.Play();
+        audioSource.PlayOneShot(gunShot);
         playerAnimator.SetBool("isShooting", true);
 
         RaycastHit hit;
@@ -41,6 +49,10 @@ public class WeaponManager : MonoBehaviour
             if (enemyManager != null)
             {
                 enemyManager.Hit(damage);
+                GameObject instParticles = Instantiate(hitParticle, hit.point, Quaternion.LookRotation(hit.normal));
+                instParticles.transform.parent = hit.transform;
+
+                Destroy(instParticles, 2f);
             }
         }
     }
