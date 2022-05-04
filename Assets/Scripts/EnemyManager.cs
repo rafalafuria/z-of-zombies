@@ -22,6 +22,8 @@ public class EnemyManager : MonoBehaviour
     public AudioClip[] zombieSounds;
     public AudioSource audioSource;
 
+    public int points = 20;
+
     public void Hit(float damage)
     {
         health -= damage;

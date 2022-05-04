@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public float walkSpeed = 5f;
+    public float sprintSpeed = 10f;
+
     public CharacterController controller;
     public float speed = 12f;
     Vector3 velocity;
@@ -42,9 +45,18 @@ public class PlayerMovement : MonoBehaviour
 
         controller.Move(velocity * Time.deltaTime);
 
-        if(Input.GetButtonDown("Jump") && isGrounded)
+        if (Input.GetButtonDown("Jump") && isGrounded)
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity);
+        }
+
+        if (Input.GetButton("Fire3") && isGrounded)
+        {
+            speed = sprintSpeed;
+        }
+        else
+        {
+            speed = walkSpeed;
         }
     }
 }

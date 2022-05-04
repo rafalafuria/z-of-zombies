@@ -1902,14 +1902,15 @@ MonoBehaviour:
   gameManager: {fileID: 0}
   slider: {fileID: 2551139224667177484}
   playerInReach: 0
-  attackAnimStartDelay: 3
+  attackAnimStartDelay: 0.5
   delayBetweenAttacks: 1
   zombieSounds:
   - {fileID: 8300000, guid: 1d86d8a976bf98945a41dc6be8a04004, type: 3}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 8300000, guid: 4c285a791c630e7478685ebcf5a3cc19, type: 3}
+  - {fileID: 8300000, guid: 110d2c2db57f0794e8521485d7c53f36, type: 3}
+  - {fileID: 8300000, guid: 119480eacbb7d944f9af8d37bb87a35e, type: 3}
   audioSource: {fileID: 0}
+  points: 20
 --- !u!195 &7353952992982462763
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1943,9 +1944,9 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.6
-  m_Height: 1
+  m_Height: 3.548668
   m_Direction: 1
-  m_Center: {x: 0, y: 3.3, z: 0}
+  m_Center: {x: 0, y: 2.1256661, z: 0}
 --- !u!54 &1736611601092174274
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1975,7 +1976,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 0.5
-  m_Pitch: 0.5
+  m_Pitch: 1
   Loop: 0
   Mute: 0
   Spatialize: 0
