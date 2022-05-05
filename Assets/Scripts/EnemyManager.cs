@@ -1,3 +1,4 @@
+using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,27 +24,42 @@ public class EnemyManager : MonoBehaviour
     public AudioSource audioSource;
 
     public int points = 20;
+    GameObject[] playersInScene;
+
+    public PhotonView photonView;
 
     public void Hit(float damage)
     {
-        health -= damage;
-        slider.value = health;
-        if (health <= 0)
+        photonView.RPC("TakeDamage", RpcTarget.All, damage, photonView.ViewID);
+    }
+    [PunRPC]
+    public void TakeDamage(float damage, int viewID)
+    {
+        if (photonView.ViewID == viewID)
         {
-            enemyAnimator.SetTrigger("isDead");
-            gameManager.enemiesAlive--;
-            Destroy(gameObject, 10f);
-            Destroy(GetComponent<NavMeshAgent>());
-            Destroy(GetComponent<EnemyManager>());
-            Destroy(GetComponent<CapsuleCollider>());
+            health -= damage;
+            slider.value = health;
+            if (health <= 0)
+            {
+                enemyAnimator.SetTrigger("isDead");
+                if (!PhotonNetwork.InRoom || PhotonNetwork.IsMasterClient && photonView.IsMine)
+                {
+                    gameManager.enemiesAlive--;
+                }
+                Destroy(gameObject, 10f);
+                Destroy(GetComponent<NavMeshAgent>());
+                Destroy(GetComponent<EnemyManager>());
+                Destroy(GetComponent<CapsuleCollider>());
+            }
         }
+
     }
 
     // Start is called before the first frame update
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
-        player = GameObject.FindGameObjectWithTag("Player");
+        playersInScene = GameObject.FindGameObjectsWithTag("Player");
         slider.maxValue = health;
         slider.value = health;
     }
@@ -57,8 +73,20 @@ public class EnemyManager : MonoBehaviour
             audioSource.Play();
         }
 
-        slider.transform.LookAt(player.transform);
-        GetComponent<NavMeshAgent>().destination = player.transform.position;
+        if (PhotonNetwork.InRoom && !PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        GetCLosestPlayer();
+
+        if (player != null)
+        {
+            slider.transform.LookAt(player.transform);
+
+            GetComponent<NavMeshAgent>().destination = player.transform.position;
+        }
+
         if (GetComponent<NavMeshAgent>().velocity.magnitude > 1)
         {
             enemyAnimator.SetBool("isRunning", true);
@@ -66,6 +94,25 @@ public class EnemyManager : MonoBehaviour
         else
         {
             enemyAnimator.SetBool("isRunning", false);
+        }
+    }
+
+    private void GetCLosestPlayer()
+    {
+        float minDistance = Mathf.Infinity;
+        Vector3 currentPosition = transform.position;
+
+        foreach (GameObject thisPlayer in playersInScene)
+        {
+            if (thisPlayer != null)
+            {
+                float distance = Vector3.Distance(thisPlayer.transform.position, currentPosition);
+                if (distance < minDistance)
+                {
+                    player = thisPlayer;
+                    minDistance = distance;
+                }
+            }
         }
     }
 

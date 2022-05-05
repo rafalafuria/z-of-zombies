@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Photon.Pun;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
+using Photon.Realtime;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerManager : MonoBehaviourPunCallbacks
 {
     public float health = 100;
 
@@ -29,6 +32,8 @@ public class PlayerManager : MonoBehaviour
 
     public float healthCap;
 
+    public PhotonView photonView;
+
 
     private void Start()
     {
@@ -40,6 +45,12 @@ public class PlayerManager : MonoBehaviour
 
     private void Update()
     {
+        if (PhotonNetwork.InRoom && !photonView.IsMine)
+        {
+            playerCamera.SetActive(false);
+            return;
+        }
+
         if (hurtPanel.alpha > 0)
         {
             hurtPanel.alpha -= Time.deltaTime;
@@ -64,20 +75,38 @@ public class PlayerManager : MonoBehaviour
 
     public void Hit(float damage)
     {
-        health -= damage;
-        healthText.text = "Health " + health.ToString();
-
-        if (health <= 0)
+        if (PhotonNetwork.InRoom)
         {
-            gameManager.EndGame();
+            //rpc
+            photonView.RPC("PlayerTakeDamage", RpcTarget.All, damage, photonView.ViewID);
         }
         else
         {
-            shakeTime = 0;
-            shakeDuration = 0.2f;
-            hurtPanel.alpha = 1;
+            PlayerTakeDamage(damage, photonView.ViewID);
         }
     }
+
+    [PunRPC]
+    public void PlayerTakeDamage(float damage, int viewID)
+    {
+        if (photonView.ViewID == viewID)
+        {
+            health -= damage;
+            healthText.text = "Health " + health.ToString();
+
+            if (health <= 0)
+            {
+                gameManager.EndGame();
+            }
+            else
+            {
+                shakeTime = 0;
+                shakeDuration = 0.2f;
+                hurtPanel.alpha = 1;
+            }
+        }
+    }
+
     public void CameraShake()
     {
         playerCamera.transform.localRotation = Quaternion.Euler(Random.Range(-2, 2), 0, 0);
@@ -107,5 +136,26 @@ public class PlayerManager : MonoBehaviour
             index++;
         }
         activeWeaponIndex = weaponIndex;
+
+        if (photonView.IsMine)
+        {
+            Hashtable hash = new Hashtable();
+            hash.Add("weaponIndex", weaponIndex);
+            PhotonNetwork.LocalPlayer.SetCustomProperties(hash);
+        }
+    }
+
+    public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
+    {
+        if (!photonView.IsMine && targetPlayer == photonView.Owner && changedProps["weaponIndex"] != null)
+        {
+            WeaponSwitch((int)changedProps["weaponIndex"]);
+        }
+    }
+
+    [PunRPC]
+    public void WeaponShootVFX(int viewID)
+    {
+        activeWeapon.GetComponent<WeaponManager>().ShootVFX(viewID);
     }
 }
